@@ -1,85 +1,81 @@
-# search_algorithms.py
+from matplotlib.path import Path
+
 from utils import Queue
 from grid import Point
 
+
+
+"""
+BFS Pseudocode (Breadth-First Search) from class:
+- node <- NODE(problem.INITIAL)                     # Create a node with the initial state
+- if problem.IS-GOAL(node.STATE) then return node   # Check if initial state is the goal, return if true
+- frontier <- a FIFO queue, with node as an element # Initialize a FIFO (First-In, First-Out) queue with the initial node
+- reached <- {problem.INITIAL}                      # Track reached states to avoid cycles, start with initial state
+- while not IS-EMPTY(frontier) do:                  # Continue while there are nodes to explore
+    - node <- POP(frontier)                         # Remove and get the next node from the queue
+    - for each child in EXPAND(problem, node) do:   # Generate all possible child states from the current node
+        - s <- child.STATE                          # Get the state of the child
+        - if problem.IS-GOAL(s) then return child   # If the child's state is the goal, return the child node
+        - if s is not in reached then:              # If we haven't seen this state before
+            - add s to reached                      # Mark the state as reached
+            - add child to frontier                 # Add the child node to the queue for exploration
+- return failure                                    # No path found, return failure
+"""
 def bfs(source, dest, epolygons):
-    """Breadth-First Search: returns path, path_cost, nodes_expanded.
-    
-    Args:
-        source (Point): Starting point (problem.INITIAL).
-        dest (Point): Destination point (goal state).
-        epolygons (list): List of enclosure polygons (list of Point objects).
-    
-    Returns:
-        tuple: (path, path_cost, nodes_expanded) where path is a list of Points,
-               path_cost is the number of steps, and nodes_expanded is the count of expanded nodes.
-    """
-    # node <- NODE(problem.INITIAL)
+
+    nodes_expanded = 0
+
     node = {'state': source, 'parent': None}
+    if node['state'] == dest:
+        return [node['state']], 0, nodes_expanded
     
-    # if problem.IS-GOAL(node.STATE) then return node
-    if source == dest:
-        return [source], 0, 0  # Path with just the source, cost 0, no nodes expanded
-    
-    # frontier <- a FIFO queue, with node as an element
     frontier = Queue()
     frontier.push(node)
-    
-    # reached <- {problem.INITIAL}
-    reached = {source}  # Set of states (points) we've reached
-    
-    # Count nodes expanded (when we first explore a node)
-    nodes_expanded = 0
-    
-    # while not IS-EMPTY(frontier) do
+    reached = {source}
+
     while not frontier.isEmpty():
-        # node <- POP(frontier)
         node = frontier.pop()
-        current_state = node['state']
-        
-        # for each child in EXPAND(problem, node) do
-        for successor in get_successors(current_state, epolygons):  # EXPAND generates child states
-            child = {'state': successor, 'parent': node}
-            s = successor  # s <- child.STATE
-            
-            # if problem.IS-GOAL(s) then return child
-            if s == dest:
-                # Reconstruct path from child to source
-                path = []
-                current = child
-                while current is not None:
-                    path.append(current['state'])
-                    current = current['parent']
-                path.reverse()
-                return path, len(path) - 1, nodes_expanded
-            
-            # if s is not in reached then
-            if s not in reached:
-                # add s to reached
-                reached.add(s)
-                # add child to frontier
-                frontier.push(child)
-                nodes_expanded += 1  # Increment nodes expanded when adding to frontier (first time reaching)
-    
-    # return failure
+        current = node['state']
+        for dx,dy in [(0,1),(1,0),(0,-1),(-1,0)]:
+            x,y = current.x + dx, current.y + dy
+            if 0 <= x < 50 and 0 <= y < 50:
+                successor = Point(x,y)
+                
+                if not any(enclosure_check(successor, ep) for ep in epolygons):
+                    child = {'state': successor, 'parent': node}
+                    s = successor
+
+                    if s == dest:
+                        path = []
+                        current_node = child
+                        while current_node is not None:
+                            path.append(current_node['state'])
+                            current_node = current_node['parent']
+                        path.reverse()
+                        return path, len(path) - 1, nodes_expanded
+                    
+                    if s not in reached:
+                        reached.add(s)
+                        frontier.push(child)
+                        nodes_expanded += 1
+
     return None, None, nodes_expanded
 
-# Helper function (remains the same)
-def get_successors(point, epolygons):
-    """Get valid successor points (up, right, down, left) avoiding enclosures."""
-    successors = []
-    for dx, dy in [(0, 1), (1, 0), (0, -1), (-1, 0)]:  # Order: up, right, down, left
-        nx, ny = point.x + dx, point.y + dy
-        if 0 <= nx < 50 and 0 <= ny < 50:  # Check grid boundaries
-            successor = Point(nx, ny)
-            # Check if successor is not inside or on edge of any enclosure
-            if not any(is_inside_or_on_edge(successor, ep) for ep in epolygons):
-                successors.append(successor)
-    return successors
+"""
+    Supporting method to detemine if a point lies within or on the edge of an enclosure.
 
-# Helper function (remains the same)
-def is_inside_or_on_edge(point, polygon):
-    """Check if a point is inside or on the edge of a polygon."""
-    from matplotlib.path import Path
-    path = Path([p.to_tuple() for p in polygon])
-    return path.contains_point(point.to_tuple())
+    point: the point in question.
+    polygon: the polygon in question.
+
+    returns true if point lies within or on polygon, false otherwise. 
+"""
+def enclosure_check(point, polygon):
+    
+    #turning the polygon into a set of points and then turning those points into a path
+    poly_points = [(pt.x, pt.y) for pt in polygon]
+    path = Path(poly_points)
+
+    #now check if our point lies on that path
+    point_convert = (point.x, point.y)
+    return path.contains_point(point_convert)
+

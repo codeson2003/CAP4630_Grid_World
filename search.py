@@ -5,7 +5,7 @@ import matplotlib.animation as animation
 
 from utils import *
 from grid import *
-from search_algorithms import *
+from search_algorithms import bfs
 
 def gen_polygons(worldfilepath):
     polygons = []
@@ -50,15 +50,11 @@ if __name__ == "__main__":
             draw_green_line(ax, [polygon[i].x, polygon[(i+1)%len(polygon)].x], [polygon[i].y, polygon[(i+1)%len(polygon)].y])
 
     #### Here call your search to compute and collect res_path
-
-    path, path_cost, nodes_expanded = bfs(source, dest, epolygons)
-
-    if path:
-        print(f"BFS: path cost = {path_cost}, nodes expanded = {nodes_expanded}")
-        for i in range(len(path)-1):
-            draw_result_line(ax, [path[i].x, path[i+1].x], [path[i].y, path[i+1].y])
-            plt.pause(0.1)  # Pause to show path step by step (optional for visualization)
-    else:
-        print("BFS: No path found")
+    
+    res_path, path_cost, nodes_expanded = bfs(source,dest,epolygons)
+    
+    for i in range(len(res_path)-1):
+        draw_result_line(ax, [res_path[i].x, res_path[i+1].x], [res_path[i].y, res_path[i+1].y])
+        plt.pause(0.1)
     
     plt.show()
