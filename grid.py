@@ -15,6 +15,8 @@ class Point:
             return False
     def to_tuple(self):
         return self.x, self.y
+    def __hash__(self):
+        return hash((self.x, self.y))
 
 def draw_board():
     # create a figure to draw the board
