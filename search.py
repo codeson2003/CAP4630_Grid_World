@@ -52,7 +52,7 @@ if __name__ == "__main__":
     #### Here call your search to compute and collect res_path
     
     res_path, path_cost, nodes_expanded = bfs(source,dest,epolygons)
-    
+    print(nodes_expanded, " ", path_cost)
     for i in range(len(res_path)-1):
         draw_result_line(ax, [res_path[i].x, res_path[i+1].x], [res_path[i].y, res_path[i+1].y])
         plt.pause(0.1)

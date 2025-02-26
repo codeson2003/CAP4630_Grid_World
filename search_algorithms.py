@@ -1,7 +1,56 @@
 from matplotlib.path import Path
 
-from utils import Queue
+from utils import *
 from grid import Point
+
+
+
+
+
+
+"""
+    function DEPTH-FIRST-SEARCH(problem) returns a solution node or failure
+    frontier <- a LIFO queue (stack) with NODE(problem.INITIAL) as an element
+        while not IS-EMPTY(frontier) do
+            node <- POP(frontier)
+            if problem.IS-GOAL(node.STATE) then return node
+            for each child in EXPAND(problem, node) do
+                if not IS-CYCLE(child) do
+                    add child to frontier
+    return result
+
+"""
+def dfs(source, dest, epolygons):
+    
+    nodes_expanded = 0
+
+    node = {'state': source, 'parent': None}
+    
+    frontier = Stack()
+    frontier.push(node)
+    reached = {source}
+
+    while not frontier.isEmpty():
+        node = frontier.pop()
+        if node['state'] == dest:
+            return [node['state']], 0, nodes_expanded
+        
+        current = node['state']
+
+        for dx,dy in [(0,1),(1,0),(0,-1),(-1,0)]:
+            x,y = current.x + dx, current.y + dy
+            if 0 <= x < 50 and 0 <= y < 50:
+                successor = Point(x,y)
+
+                if not any(enclosure_check(successor, ep) for ep in epolygons):
+                    child = {'state': successor, 'parent': node}
+                    s = successor
+
+                    if s not in reached:
+                        reached.add(s)
+                        
+
+    return None, None, nodes_expanded
 
 
 
