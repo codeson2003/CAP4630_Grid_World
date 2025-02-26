@@ -63,6 +63,7 @@ def bfs(source, dest, epolygons):
 
 """
     Supporting method to detemine if a point lies within or on the edge of an enclosure.
+    (ray casting algorithm)
 
     point: the point in question.
     polygon: the polygon in question.
@@ -71,11 +72,53 @@ def bfs(source, dest, epolygons):
 """
 def enclosure_check(point, polygon):
     
-    #turning the polygon into a set of points and then turning those points into a path
+    #turning the polygon into a set of points
     poly_points = [(pt.x, pt.y) for pt in polygon]
-    path = Path(poly_points)
 
-    #now check if our point lies on that path
-    point_convert = (point.x, point.y)
-    return path.contains_point(point_convert)
+    #edge case to check if the point lies on an edge
+    if is_on_edge(poly_points, point):
+        return True
+    
+
+    count = 0
+    xp, yp = point.x, point.y
+
+    #calculating the edges
+    edges = []
+    for i in range(len(poly_points)):
+        p1 = poly_points[i]
+        p2 = poly_points[(i+1) % len(poly_points)] #modulo used to connect last point to first point to close poly
+        edges.append((p1,p2))
+    
+    #calculating count of
+    for edge in edges:
+        (x1,y1), (x2,y2) = edge
+        if (yp<y1) != (yp<y2) and xp < x1 + ((yp-y1) / (y2-y1)) * (x2-x1):
+            count+=1
+
+    return count % 2 == 1
+
+
+"""
+    Supporting method to the enclosure_check() algo,
+    checks if a point is on the edge of a polygon
+"""
+def is_on_edge(poly_points, point):
+
+    px,py = point.x, point.y
+
+    for i in range(len(poly_points)):
+        p1 = poly_points[i]
+        p2 = poly_points[(i + 1) % len(poly_points)]
+
+        x1, y1 = p1
+        x2, y2 = p2
+
+        #checks if the px or py is between the min,max of x1,x2 , y1,y2 respectively
+        if(min(x1, x2) <= px <= max(x1,x2) and min(y1,y2) <= py <= max(y1,y2)):
+            cross_product = ((y2-y1) * (px - x1) - (x2-x1) * (py - y1))
+            if abs(cross_product) < 0.0001:
+                return True
+            
+    return False
 
