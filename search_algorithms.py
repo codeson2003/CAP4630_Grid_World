@@ -32,11 +32,16 @@ def dfs(source, dest, epolygons):
 
     while not frontier.isEmpty():
         node = frontier.pop()
-        if node['state'] == dest:
-            return [node['state']], 0, nodes_expanded
-        
         current = node['state']
-
+        if current == dest:
+            path = []
+            current_node = node
+            while current_node is not None:
+                path.append(current_node['state'])
+                current_node = current_node['parent']
+            path.reverse()
+            return path, len(path) - 1, nodes_expanded
+        
         for dx,dy in [(0,1),(1,0),(0,-1),(-1,0)]:
             x,y = current.x + dx, current.y + dy
             if 0 <= x < 50 and 0 <= y < 50:
@@ -48,7 +53,9 @@ def dfs(source, dest, epolygons):
 
                     if s not in reached:
                         reached.add(s)
-                        
+                        frontier.push(child)
+                        nodes_expanded+=1
+
 
     return None, None, nodes_expanded
 

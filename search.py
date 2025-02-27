@@ -5,7 +5,7 @@ import matplotlib.animation as animation
 
 from utils import *
 from grid import *
-from search_algorithms import bfs
+from search_algorithms import bfs, dfs
 
 def gen_polygons(worldfilepath):
     polygons = []
@@ -50,11 +50,23 @@ if __name__ == "__main__":
             draw_green_line(ax, [polygon[i].x, polygon[(i+1)%len(polygon)].x], [polygon[i].y, polygon[(i+1)%len(polygon)].y])
 
     #### Here call your search to compute and collect res_path
+    print("1. DFS\n2. BFS\n3. GBFS\n4. A*\n", end = '')
+    user_input = input("Choose a search algorithm to run (enter number 1-4): ")
+    choice = int(user_input)
+
+    match choice:
+        case 1:
+            res_path, path_cost, nodes_expanded = dfs(source,dest,epolygons)
+        case 2:
+            res_path, path_cost, nodes_expanded = bfs(source,dest,epolygons)
+        case _:
+            print("Error: Please enter a number between 1 and 4. ")
+            exit(1)
+
     
-    res_path, path_cost, nodes_expanded = bfs(source,dest,epolygons)
-    print(nodes_expanded, " ", path_cost)
+    
     for i in range(len(res_path)-1):
         draw_result_line(ax, [res_path[i].x, res_path[i+1].x], [res_path[i].y, res_path[i+1].y])
         plt.pause(0.1)
-    
+    print(nodes_expanded, " ", path_cost)
     plt.show()
