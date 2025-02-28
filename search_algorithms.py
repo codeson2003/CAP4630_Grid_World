@@ -4,6 +4,43 @@ from utils import *
 from grid import Point
 
 
+def astar(source,dest,epolygons,tpolygons):
+    nodes_expanded = 0
+    node = {'state': source, 'parent': None, 'path_cost': 0}
+    frontier = PriorityQueue()
+    frontier.push(node, hueristic(source, dest) + node['path_cost'])
+    reached = {source: node}
+
+    while not frontier.isEmpty():
+        node = frontier.pop()
+        current = node['state']
+
+        if current == dest:
+            path = []
+            current_node = node
+            while current_node is not None:
+                path.append(current_node['state'])
+                current_node = current_node['parent']
+            path.reverse()
+            path_cost = node['path_cost']
+            return path, path_cost, nodes_expanded
+        
+        for dx,dy in [(0,1),(1,0),(0,-1),(-1,0)]:
+            x,y = current.x + dx, current.y + dy
+            if 0 <= x < 50 and 0 <= y < 50:
+                successor = Point(x,y)
+
+                if not any(enclosure_check(successor, ep) for ep in epolygons):
+                    cost = action_cost(successor, tpolygons)
+                    child_cost = node['path_cost'] + cost
+                    child = {'state': successor, 'parent': node, 'path_cost': child_cost}
+                    s = successor
+                    if s not in reached or child_cost < reached[s]['path_cost']:
+                        reached[s] = child
+                        nodes_expanded+=1
+                        frontier.push(child, hueristic(s, dest) + child_cost)
+    return None, None, nodes_expanded
+
 """
     function BEST-FIRST-SEARCH(problem, f) returns a solution or failure
         node <- NODE(STATE=problem.INITIAL)
@@ -241,7 +278,7 @@ def action_cost(point, tpolygons):
 """
     SLD hueristic function to calculate the straight line distance between the source and destination
     uses euclidean distance for the calculation
-    
+
 """
 def hueristic(point,dest):
 

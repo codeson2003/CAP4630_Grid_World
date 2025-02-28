@@ -5,7 +5,7 @@ import matplotlib.animation as animation
 
 from utils import *
 from grid import *
-from search_algorithms import bfs, dfs, gbfs
+from search_algorithms import bfs, dfs, gbfs, astar
 
 def gen_polygons(worldfilepath):
     polygons = []
@@ -22,8 +22,8 @@ def gen_polygons(worldfilepath):
     return polygons
 
 if __name__ == "__main__":
-    epolygons = gen_polygons('TestingGrid/world1_enclosures.txt')
-    tpolygons = gen_polygons('TestingGrid/world1_turfs.txt')
+    epolygons = gen_polygons('TestingGrid/world2_enclosures.txt')
+    tpolygons = gen_polygons('TestingGrid/world2_turfs.txt')
 
     source = Point(8,10)
     dest = Point(43,45)
@@ -62,6 +62,8 @@ if __name__ == "__main__":
             res_path, path_cost, nodes_expanded = bfs(source,dest,epolygons)
         case 3:
             res_path, path_cost, nodes_expanded = gbfs(source,dest,epolygons,tpolygons)
+        case 4:
+            res_path, path_cost, nodes_expanded = astar(source,dest,epolygons,tpolygons)
         case _:
             print("Error: Please enter a number between 1 and 4. ")
             exit(1)
