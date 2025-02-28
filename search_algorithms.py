@@ -1,11 +1,59 @@
 from matplotlib.path import Path
-
+import math
 from utils import *
 from grid import Point
 
 
+"""
+    function BEST-FIRST-SEARCH(problem, f) returns a solution or failure
+        node <- NODE(STATE=problem.INITIAL)
+        frontier <- a priority queue ordered by f, with node as an element
+        reached <- a lookup table, with one entry with key problem.INITIAL and value node
+        while not IS-EMPTY(frontier) do
+            node <- POP(frontier)
+            if problem.IS-GOAL(node.STATE) then return node
+            for each child in EXPAND(problem, node) do
+                s <- child.STATE
+                if s is not in reached or child.PATH-COST < reached[s].PATH-COST then
+                    reached[s] <- child
+                    add child to frontier
+return failure
+"""
+def gbfs(source,dest,epolygons,tpolygons):
 
+    nodes_expanded = 0
+    node = {'state': source, 'parent': None}
+    frontier = PriorityQueue()
+    frontier.push(node, hueristic(source, dest))
+    reached = {source: node}
 
+    while not frontier.isEmpty():
+        node = frontier.pop()
+        current = node['state']
+
+        if current == dest:
+            path = []
+            current_node = node
+            while current_node is not None:
+                path.append(current_node['state'])
+                current_node = current_node['parent']
+            path.reverse()
+            path_cost = sum(action_cost(path[i+1], tpolygons) for i in range(len(path) - 1))
+            return path, path_cost, nodes_expanded
+        
+        for dx,dy in [(0,1),(1,0),(0,-1),(-1,0)]:
+            x,y = current.x + dx, current.y + dy
+            if 0 <= x < 50 and 0 <= y < 50:
+                successor = Point(x,y)
+
+                if not any(enclosure_check(successor, ep) for ep in epolygons):
+                    child = {'state': successor, 'parent': node}
+                    s = successor
+                    if s not in reached :
+                        reached[s] = child
+                        nodes_expanded+=1
+                        frontier.push(child, hueristic(s, dest))
+    return None, None, nodes_expanded
 
 
 """
@@ -62,20 +110,19 @@ def dfs(source, dest, epolygons):
 
 
 """
-BFS Pseudocode (Breadth-First Search) from class:
-- node <- NODE(problem.INITIAL)                     # Create a node with the initial state
-- if problem.IS-GOAL(node.STATE) then return node   # Check if initial state is the goal, return if true
-- frontier <- a FIFO queue, with node as an element # Initialize a FIFO (First-In, First-Out) queue with the initial node
-- reached <- {problem.INITIAL}                      # Track reached states to avoid cycles, start with initial state
-- while not IS-EMPTY(frontier) do:                  # Continue while there are nodes to explore
-    - node <- POP(frontier)                         # Remove and get the next node from the queue
-    - for each child in EXPAND(problem, node) do:   # Generate all possible child states from the current node
-        - s <- child.STATE                          # Get the state of the child
-        - if problem.IS-GOAL(s) then return child   # If the child's state is the goal, return the child node
-        - if s is not in reached then:              # If we haven't seen this state before
-            - add s to reached                      # Mark the state as reached
-            - add child to frontier                 # Add the child node to the queue for exploration
-- return failure                                    # No path found, return failure
+node <- NODE(problem.INITIAL)
+if problem.IS-GOAL(node.STATE) then return node
+frontier <- a FIFO queue, with node as an element
+reached <- {problem.INITIAL}
+while not IS-EMPTY(frontier) do:
+    node <- POP(frontier)
+    for each child in EXPAND(problem, node) do:
+        s <- child.STATE
+        if problem.IS-GOAL(s) then return child
+        if s is not in reached then:
+            add s to reached
+            add child to frontier
+return failure
 """
 def bfs(source, dest, epolygons):
 
@@ -178,3 +225,24 @@ def is_on_edge(poly_points, point):
             
     return False
 
+"""
+    Action cost algorithm to determine cost of next move!
+    Parameters: point - point in question, tpolygons - turf polygons
+
+    Returns 1.5 if inside or on edge of turf polygon, else 1
+"""
+def action_cost(point, tpolygons):
+
+    if any(enclosure_check(point, tp) for tp in tpolygons):
+        return 1.5
+
+    return 1
+
+"""
+    SLD hueristic function to calculate the straight line distance between the source and destination
+    uses euclidean distance for the calculation
+    
+"""
+def hueristic(point,dest):
+
+    return math.sqrt((point.x - dest.x) ** 2 + (point.y - dest.y) ** 2)

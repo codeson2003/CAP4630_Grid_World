@@ -5,7 +5,7 @@ import matplotlib.animation as animation
 
 from utils import *
 from grid import *
-from search_algorithms import bfs, dfs
+from search_algorithms import bfs, dfs, gbfs
 
 def gen_polygons(worldfilepath):
     polygons = []
@@ -54,11 +54,14 @@ if __name__ == "__main__":
     user_input = input("Choose a search algorithm to run (enter number 1-4): ")
     choice = int(user_input)
 
+    #switch to choose which algorithm you'd like to run
     match choice:
         case 1:
             res_path, path_cost, nodes_expanded = dfs(source,dest,epolygons)
         case 2:
             res_path, path_cost, nodes_expanded = bfs(source,dest,epolygons)
+        case 3:
+            res_path, path_cost, nodes_expanded = gbfs(source,dest,epolygons,tpolygons)
         case _:
             print("Error: Please enter a number between 1 and 4. ")
             exit(1)
